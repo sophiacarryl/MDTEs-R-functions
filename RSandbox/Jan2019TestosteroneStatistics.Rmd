@@ -1,0 +1,867 @@
+---
+title: "Jan 2019 Testosterone Statistics"
+author: "Sophia S. Carryl"
+date: "1/15/2019"
+output:
+  html_document:
+    df_print: kable
+    highlight: haddock
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: no
+  pdf_document:
+    df_print: kable
+    highlight: haddock
+    number_section: yes
+    toc: 1
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(length.cutoff=40),tidy=TRUE)
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library("ggpubr")
+library("ggpmisc")
+library("smatr")
+library("dplyr")
+library("ggplot2")
+library("dunn.test")
+library("RColorBrewer")
+library("multcomp")
+library("FSA")
+library("lmerTest")
+library("lme4")
+library("nlme")
+library("sjPlot")
+library("sjmisc")
+library("car")
+library("visreg")
+library("plyr")
+library("tidyr")
+library("lsmeans")
+library("agricolae")
+library("lubridate")
+library("scales")
+library("ggrepel")
+
+```
+
+
+#Standard Error
+```{r}
+summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
+                      conf.interval=.95, .drop=TRUE) {
+  library(plyr)
+  
+  # New version of length which can handle NA's: if na.rm==T, don't count them
+  length2 <- function (x, na.rm=FALSE) {
+    if (na.rm) sum(!is.na(x))
+    else       length(x)
+  }
+  
+  # This does the summary. For each group's data frame, return a vector with
+  # N, mean, and sd
+  datac <- ddply(data, groupvars, .drop=.drop,
+                 .fun = function(xx, col) {
+                   c(N    = length2(xx[[col]], na.rm=na.rm),
+                     mean = mean   (xx[[col]], na.rm=na.rm),
+                     sd   = sd     (xx[[col]], na.rm=na.rm)
+                   )
+                 },
+                 measurevar
+  )
+  
+  # Rename the "mean" column    
+  datac <- rename(datac, c("mean" = measurevar))
+  
+  datac$se <- datac$sd / sqrt(datac$N)  # Calculate standard error of the mean
+  
+  # Confidence interval multiplier for standard error
+  # Calculate t-statistic for confidence interval: 
+  # e.g., if conf.interval is .95, use .975 (above/below), and use df=N-1
+  ciMult <- qt(conf.interval/2 + .5, datac$N-1)
+  datac$ci <- datac$se * ciMult
+  
+  return(datac)
+}
+```
+
+
+# Testosterone 
+
+```{r}
+Testosterone = read.csv("/Volumes/SophCarr/HouseSparrows/Testosterone/TestosteroneHormones_Dec2018.csv")
+
+Testosterone = subset(Testosterone, select = c("BirdID", "Sex", "BreedingStatus", "Season", "Tail", "Wing",  "Tarsus", "Beak", "Weight", "Month", "Location", "Testosterone.ng.g.", "Corticosterone.ng.g.", "Gradient", "Age", "Date", "Astro_Season", "CCPlate_Number", "Tplate_Number"))
+
+colnames(Testosterone) = c("BirdID", "Sex", "BreedingStatus", "Season", "Tail", "Wing", "Tarsus", "Beak", "Mass", "Month", "Location", "Testo", "CC", "Gradient", "Age", "Date","Astro_Season","CCPlate_Number", "TPlate_Number")
+
+Testosterone$CCPlate_Number = as.character(Testosterone$CCPlate_Number)
+Testosterone$TPlate_Number = as.character(Testosterone$TPlate_Number)
+
+
+Testosterone$LogT = log(Testosterone$Testo)
+Testosterone$LogCC = log(Testosterone$CC)
+Testosterone = subset(Testosterone, Age != "Nestling")
+# Testosterone = subset(Testosterone, Location != "Lansing")
+# Testosterone = subset(Testosterone, Age != "U")
+# Testosterone = Testosterone %>% filter(!is.na(LogT))
+
+
+Testosterone$Date = as.Date(Testosterone$Date, format = '%m/%d/%y')
+Testosterone$Month = factor(Testosterone$Month , levels = c("April", "May", "June", "July", "August","September", "October","November", "December"))
+Testosterone$Season = factor(Testosterone$Season , levels = c("Spring", "Summer", "Fall", "Winter"))
+Testosterone$Astro_Season = factor(Testosterone$Astro_Season , levels = c("Spring", "Summer", "Fall", "Winter"))
+Testosterone$Age = factor(Testosterone$Age , levels = c("Juvenile", "Adult"))
+Testosterone$Gradient = factor(Testosterone$Gradient, levels = c("Urban", "Suburban", "Rural"))
+
+Testosterone$Month_Date = format(as.Date(Testosterone$Date), "%m-%d")
+Testosterone$Month_Date = as.Date(paste0(Testosterone$Month_Date, "-2000"),format = '%m-%d-%y' )
+```
+
+
+```{r}
+#Testosterone = Testosterone %>% filter(!is.na(Month))
+Nesting_group = c("April", "May", "June", "July", "August")
+Molting_group = c("September", "October")
+Wintering_group = c("November","December")
+
+Testosterone$Status = with(Testosterone, ifelse(Month %in% Nesting_group, "Nesting", 
+                          ifelse(Month %in% Molting_group, "Molting", "Wintering")))
+
+Testosterone$Status = factor(Testosterone$Status, levels = c("Nesting", "Molting", "Wintering"))
+```
+
+
+```{r}
+count(Testosterone, c("Status"))
+
+```
+
+```{r}
+count(Testosterone, c("Age"))
+```
+
+
+```{r}
+#Testosterone = subset(Testosterone, BirdID != "LPZ382" & BirdID != "LPZ330")
+A_Testosterone = subset(Testosterone, Age == "Adult")
+J_Testosterone = subset(Testosterone, Age == "Juvenile")
+U_Testosterone = subset(Testosterone, Sex != "U")
+
+```
+
+```{r}
+Summarize(LogCC ~ Sex,
+          data=A_Testosterone,
+          digits=3)
+```
+
+```{r}
+ggplot(Testosterone, aes(x = Status, y = LogT, fill = Status)) +
+  theme_bw() +
+  stat_summary(fun.y = mean, geom = "bar",position=position_dodge()) +
+  stat_summary(fun.data = mean_se, fun.args = list(mult = 1), geom = "errorbar", width = 0.2,position=position_dodge(.9)) +
+  scale_fill_manual(values = c("#bae4bc", "#238b45", "#80b1d3", "#1f78b4"), 
+                     name="Season") +
+    # theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  labs(y = "Log Testosterone (ng/g)", x = "Date", title = "Meteorological Seasons",
+  caption = "Meteorological seasons begin on the first day of the months that include the equinoxes and solstices.") +
+   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+         plot.caption = element_text(vjust = -1, hjust = -0, size = 10, face = "italic")) +
+  theme(axis.title.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 15)) +
+    theme(axis.text.x=element_text(size = 15),
+        axis.text.y=element_text(size = 15))
+```
+
+```{r}
+ggplot(A_Testosterone, aes(x = Astro_Season, y = LogT, fill = Astro_Season)) +
+  theme_bw() +
+  stat_summary(fun.y = mean, geom = "bar",position=position_dodge()) +
+  stat_summary(fun.data = mean_se, fun.args = list(mult = 1), geom = "errorbar", width = 0.2,position=position_dodge(.9)) +
+  scale_fill_manual(values = c("#bae4bc", "#238b45", "#80b1d3", "#1f78b4"), 
+                     name="Season") +
+    # theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  labs(y = "Log Testosterone (ng/g)", x = "Date", title = "Astronimical Seasons",
+  caption = "Astronomical seasons use the dates of equinoxes and solstices to mark the beginning and end\nof the seasons.") +
+   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+         plot.caption = element_text(vjust = -1, hjust = -0, size = 10, face = "italic")) +
+  theme(axis.title.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 15)) +
+    theme(axis.text.x=element_text(size = 15),
+        axis.text.y=element_text(size = 15))
+```
+
+##Sex
+```{r}
+ggplot(A_Testosterone, aes(x = Sex, y = LogT, fill = Sex)) +
+  theme_bw() +
+  stat_summary(fun.y = mean, geom = "bar",position=position_dodge()) +
+  stat_summary(fun.data = mean_se, fun.args = list(mult = 1), geom = "errorbar", width = 0.2,position=position_dodge(.9)) +
+  scale_fill_manual(values = c("thistle","hotpink3"), 
+                     name=" ") +
+  theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  labs(y = "Log (ng/g)", x = " ", title = " ",
+  caption = "") +
+   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+         plot.caption = element_text(vjust = -1, hjust = -0, size = 10, face = "italic")) +
+  theme(axis.title.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 15)) +
+    theme(axis.text.x=element_text(size = 15),
+        axis.text.y=element_text(size = 15))
+```
+
+##Age
+```{r}
+ggplot(Testosterone, aes(x = Month, y = LogT, fill = Age)) +
+  #facet_wrap(.~Sex) +
+  theme_bw() +
+  stat_summary(fun.y = mean, geom = "bar",position=position_dodge()) +
+  stat_summary(fun.data = mean_se, fun.args = list(mult = 1), geom = "errorbar", width = 0.2,position=position_dodge(.9)) +
+  #scale_x_discrete(limits =c("Juvenile", "Adult")) +
+  scale_fill_manual(values = c("darksalmon", "darkorange3"), 
+                     name="Age") +
+    theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  labs(y = "Testosterone Log (ng/g)", x = " ", title = "",
+  caption = "") +
+   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+         plot.caption = element_text(vjust = -1, hjust = -0, size = 10, face = "italic")) +
+  theme(axis.title.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 15)) +
+    theme(axis.text.x=element_text(size = 15),
+        axis.text.y=element_text(size = 15))
+```
+
+
+```{r}
+ggplot(A_Testosterone, aes(x=Status , y=LogT)) + 
+  geom_bar(stat = "identity", aes(fill = Status))
+```
+
+
+###Least Mean Square
+
+```{r}
+# model = lm(LogT ~ Age,
+#            data = Testosterone)
+# 
+# 
+# lsmeans(model,
+#        pairwise ~ Age)
+```
+
+
+```{r}
+Testosterone = subset(Testosterone, BirdID != "LPZ382" & BirdID != "LPZ330")
+A_Testosterone = subset(Testosterone, Age == "Adult")
+J_Testosterone = subset(Testosterone, Age == "Juvenile")
+```
+
+###Scatter Plot
+ #Astronomical Seasons
+```{r}
+ggplot(A_Testosterone, aes(x=Month_Date , y=Testo)) + 
+  geom_point(size = 9, aes(color = Astro_Season,shape =Sex)) +
+  theme_bw() +
+  scale_color_manual(values = c("#bae4bc", "#238b45", "#80b1d3", "#1f78b4"), 
+                     name="Season") +
+  scale_x_date(date_breaks = "1 month",labels = date_format("%m-%d")) +
+  geom_smooth(method="loess", se=TRUE, fullrange=FALSE, level=.95, color = "antiquewhite4") +
+  theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  labs(y = "Log Testosterone (ng/g)", x = "Date", title = "Astronimical Seasons",
+  caption = "Astronomical seasons use the dates of equinoxes and solstices to mark the beginning and end\nof the seasons.") +
+   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+         plot.caption = element_text(vjust = -1, hjust = -0, size = 10, face = "italic")) +
+  theme(axis.title.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 15)) +
+    theme(axis.text.x=element_text(size = 15),
+        axis.text.y=element_text(size = 15)) +
+  annotate("rect", xmin = as.Date("2020-08-01"), xmax = as.Date("2020-10-01"), ymin = -1.1,               ymax = -1,alpha = .15, fill = "#8c6bb1", color = "grey") +
+  annotate("rect", xmin = as.Date("2020-08-01"), xmax = as.Date("2020-09-01") , ymin = -1.1,              ymax = -1,alpha = .5, fill = "#8c6bb1", color = "grey58") +
+  annotate("rect", xmin = as.Date("2020-04-01"), xmax = as.Date("2020-09-01"), ymin = -1.4,
+           ymax = -1.5,alpha = .3, fill = "#fec44f", color = "grey") +
+  annotate("rect", xmin = as.Date("2020-04-01"), xmax = as.Date("2020-08-01"), ymin = -1.4,
+           ymax = -1.5, alpha = .4, fill = "#fec44f", color = "grey")
+
+```
+
+
+# Meteorological Season
+```{r}
+ggplot(A_Testosterone, aes(x=Month_Date , y=LogT)) + 
+  geom_point(size = 9, aes(color = Season, shape = Sex)) +
+  theme_bw() +
+  scale_color_manual(values = c("#bae4bc", "#238b45", "#80b1d3", "#1f78b4"), 
+                     name="Season") +
+  scale_x_date(date_breaks = "1 month",labels = date_format("%m-%d")) +
+  geom_smooth(method="loess", se=TRUE, fullrange=FALSE, level=.95, color = "antiquewhite4") +
+  theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  labs(y = "Log Testosterone (ng/g)", x = "Date", title = "Meteorological  Seasons",
+  caption = "Meteorological seasons begin on the first day of the months that include the equinoxes and solstices.") +
+   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+         plot.caption = element_text(hjust = -0, size = 10, face = "italic")) +
+  theme(axis.title.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 15)) +
+        theme(axis.text.x=element_text(size = 15),
+        axis.text.y=element_text(size = 15)) +
+  annotate("rect", xmin = as.Date("2020-08-01"), xmax = as.Date("2020-10-01"), ymin = -1.1,               ymax = -1,alpha = .15, fill = "#8c6bb1", color = "grey") +
+  annotate("rect", xmin = as.Date("2020-08-01"), xmax = as.Date("2020-09-01") , ymin = -1.1,              ymax = -1,alpha = .5, fill = "#8c6bb1", color = "grey58") +
+  annotate("rect", xmin = as.Date("2020-04-01"), xmax = as.Date("2020-09-01"), ymin = -1.4,
+           ymax = -1.5,alpha = .3, fill = "#fec44f", color = "grey") +
+  annotate("rect", xmin = as.Date("2020-04-01"), xmax = as.Date("2020-08-01"), ymin = -1.4,
+           ymax = -1.5, alpha = .4, fill = "#fec44f", color = "grey")
+  # geom_text(aes(label = BirdID))
+```
+
+#
+```{r}
+# A_Testosterone = A_Testosterone %>% filter(!is.na(LogCC))
+# A_Testosterone = A_Testosterone %>% filter(!is.na(LogT))
+
+ggplot(A_Testosterone, aes(x=LogCC , y=LogT)) + 
+  geom_point(size = 9, aes(color = Season)) +
+  theme_bw() +
+  scale_color_manual(values = c("#bae4bc", "#238b45", "#80b1d3", "#1f78b4"), 
+                     name="Season") +
+  #scale_x_date(date_breaks = "1 month",labels = date_format("%m-%d")) +
+  geom_smooth(method="lm", se=TRUE, fullrange=FALSE, level=.95, color = "antiquewhite4") +
+  theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  labs(y = "Testosterone", x = "Corticosterone", title = "",
+  caption = "") +
+   theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+         plot.caption = element_text(hjust = -0, size = 10, face = "italic")) +
+  theme(axis.title.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 15)) +
+        theme(axis.text.x=element_text(size = 15),
+    axis.text.y=element_text(size = 15))
+  # geom_text(aes(label = BirdID))
+  # geom_text(aes(label=ifelse(Age == "Adult" & Season == "Fall",as.character(BirdID),'')),hjust=0,vjust=0)
+
+```
+
+```{r}
+M_S = subset(Testosterone, Sex == "M" & Season == "Spring")
+```
+
+```{r}
+ggplot(A_Testosterone, aes(x=LogCC, y=LogT)) + 
+  geom_point(size = 8, aes(color = Astro_Season)) +
+  geom_smooth(method=lm, se=TRUE, color = "black") +
+  stat_cor(method = "pearson", label.y = 1.3, label.x = 0.058, 
+           size = 5) +
+  stat_cor(method = "pearson", aes(color = Astro_Season), #label.y = 1.5,
+           label.x = 1, size = 6) +
+  theme_classic() +
+  stat_poly_eq(formula = y ~ x,
+               aes(label = paste(..rr.label..)), 
+               parse = T, label.x.npc = .09, label.y.npc = .9, 
+               size = 5) +
+         theme(axis.title.x = element_text(size = 12)) +
+         theme(axis.title.y = element_text(size = 12)) +
+         theme(axis.text.x=element_text(size = 12),
+               axis.text.y=element_text(size = 12)) +
+  # scale_x_continuous(breaks = seq(25,40, by = 2)) +
+  # scale_y_continuous(breaks = seq(-2,2, by = .5))+
+  annotate("text", x = , y = , label = 
+          'atop(bold("Caption:"),"")',
+          colour = "black", parse = TRUE, size = 5) +
+  # ylab("Log-Testosterone Feathers (ng/g)") +
+  # xlab(" ") +
+  theme(legend.title = element_text(colour="black", size=10, 
+        face="bold")) +
+  theme(legend.text = element_text(colour="black", size = 10, face = 
+        "bold")) +
+  theme(legend.background = element_rect(fill="white", size=.5, 
+        linetype="dotted")) +
+    # scale_color_manual(values=c("darkgreen", "#E69F00", "darkblue"))
+  # scale_color_manual(values=c("darkslateblue","lavenderblush4"))
+    scale_color_manual(values=c("#bae4bc", "#238b45", "#80b1d3", "#1f78b4"))
+```
+
+
+###Subset Data
+```{r}
+#Testosterone = subset(Testosterone, BirdID != "LPZ306" & BirdID != "HHS211" & BirdID != "HHS85" & BirdID != "HHS77" & BirdID != "LPZ303")
+
+#Testosterone = subset(Testosterone, BirdID != "LPZ382")
+
+
+# Testosterone = Testosterone %>% filter(!is.na(LogT)) 
+
+#Testosterone = subset(Testosterone, Sex == "")
+# Testosterone = subset(Testosterone, Age == "Adult")
+```
+
+
+```{r}
+count(Testosterone, c("TPlate_Number"))
+```
+
+###Stand Error
+```{r}
+TestSE <- summarySE(Testosterone, measurevar="LogT", groupvars=c("Date", "Gradient"))
+```
+
+```{r}
+ggplot(TestSE, aes(x = Date, y = LogT, color = Gradient, group = Gradient)) +
+  geom_line(size = 2.5) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymin=LogT-se, ymax=LogT+se), width=.1, size = 2) +
+  theme_classic () +
+  theme(panel.background = element_blank(), panel.grid.major = element_blank(),
+        axis.line = element_line(colour = "black"), legend.key = element_blank(),
+        legend.background = ) +
+  #scale_x_discrete(limits =c("Fall", "Winter", "Spring", "Summer")) +    
+ # scale_x_discrete(limits =c("April", "May", "June", "July", "August","September", "November", "December")) +
+  # scale_color_manual(values=c("firebrick4", "darkgreen")) +
+  scale_color_manual(values=c("darkslateblue","lavenderblush4","darkgreen")) +
+  ylab("Log-Testosterone Feathers (ng/g)") +
+  xlab("") +
+  theme(axis.title.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 15)) +
+  theme(axis.text.x=element_text(size = 15),
+        axis.text.y=element_text(size = 15)) +
+  scale_y_continuous(breaks = seq(-1,2, by = .25)) +
+  theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  annotate("rect", xmin = 0.60, xmax = 11.2, ymin = -1.1, ymax = 1.8,alpha = .15, color = "grey") +
+  annotate("rect", xmin = 0.60, xmax = 10.2 , ymin = -1.1, ymax = 1.8,alpha = .5, color = "grey58") +
+  # annotate("rect", xmin = 5, xmax = 7, ymin = -2, ymax = -1.5,alpha = .3, fill = "olivedrab", color = "grey") +
+  # labs(title = " ") +
+  # annotate("rect", xmin = 5.5, xmax = 6.9, ymin = -2, ymax = -1.5,alpha = .4, fill = "olivedrab", color = "grey") +
+  labs(title = " ") 
+```
+
+
+
+```{r}
+t.test(LogT ~ Sex, paired = FALSE, alternative = "two.sided",var.equal = TRUE, data = Testosterone)
+```
+
+```{r}
+ggplot(Testosterone, aes(Date,LogT)) + 
+  geom_boxplot(aes(color = Sex)) +
+  #scale_x_discrete(limits =c("April", "May", "June", "July", "August","September", "October", "November", "December")) +
+  # scale_x_discrete(limits =c("Fall","Winter", "Spring", "Summer")) +
+  theme(panel.background = element_blank(), panel.grid.major = element_blank(),
+        axis.line = element_line(colour = "black"), legend.key = element_blank(),
+        legend.background = ) +
+  #geom_jitter(position=position_jitter(0.0), size = 2) +
+  #scale_fill_manual(values=c("firebrick4", "darkgreen")) +
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
+  theme(axis.text.x = element_text(size = 16, color = "black"),
+        axis.title.x = element_text(size = 20, color = "black", face = "bold")) +
+  theme(axis.text.y  = element_text(size = 16, color = "black"),
+        axis.title.y = element_text(size = 20, color = "black", face = "bold"))+
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  annotate("rect", xmin = 0.60, xmax = 11.4, ymin = -1.1, ymax = 1.8,alpha = .15, color = "grey") +
+  annotate("rect", xmin = 0.60, xmax = 10.2 , ymin = -1.1, ymax = 1.8,alpha = .5, color = "grey58") +
+  annotate("rect", xmin = 10, xmax = 14, ymin = -2, ymax = -1.5,alpha = .3, fill = "olivedrab", color = "grey") +
+  annotate("rect", xmin = 10.5, xmax = 12.8, ymin = -2, ymax = -1.5,alpha = .4, fill = "olivedrab", color = "grey") +
+  labs(title = " ") +
+  ylab("Log-Testosterone") +
+  xlab(" ")
+```
+
+
+```{r}
+ggplot(A_Testosterone, aes(Sex,LogCC)) + 
+  geom_boxplot(aes(fill = Season)) +
+  facet_grid(.~Location) +
+  #scale_x_discrete(limits =c("April", "May", "June", "July", "August","September", "October", "November", "December")) +
+  # scale_x_discrete(limits =c("Fall","Winter", "Spring", "Summer")) +
+  theme(panel.background = element_blank(), panel.grid.major = element_blank(),
+        axis.line = element_line(colour = "black"), legend.key = element_blank(),
+        legend.background = ) +
+  #geom_jitter(position=position_jitter(0.0), size = 2) +
+  #scale_fill_manual(values=c("firebrick4", "darkgreen")) +
+  # scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
+  # scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
+  theme(axis.text.x = element_text(size = 16, color = "black"),
+        axis.title.x = element_text(size = 20, color = "black", face = "bold")) +
+  theme(axis.text.y  = element_text(size = 16, color = "black"),
+        axis.title.y = element_text(size = 20, color = "black", face = "bold"))+
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+  # annotate("rect", xmin = 0.60, xmax = 11.4, ymin = -1.1, ymax = 1.8,alpha = .15, color = "grey") +
+  # annotate("rect", xmin = 0.60, xmax = 10.2 , ymin = -1.1, ymax = 1.8,alpha = .5, color = "grey58") +
+  # annotate("rect", xmin = 10, xmax = 14, ymin = -2, ymax = -1.5,alpha = .3, fill = "olivedrab", color = "grey") +
+  # annotate("rect", xmin = 10.5, xmax = 12.8, ymin = -2, ymax = -1.5,alpha = .4, fill = "olivedrab", color = "grey") +
+  labs(title = " ") +
+  ylab("Log-Testosterone") +
+  xlab(" ")
+```
+
+```{r}
+res = aov(LogCC ~ Season * Gradient * Sex, data = A_Testosterone)
+summary(res)
+```
+
+
+
+```{r}
+Testosterone = read.csv("/Volumes/SophCarr/HouseSparrows/Testosterone/TestosteroneHormones_Dec2018.csv")
+
+Testosterone = subset(Testosterone, select = c("BirdID", "Sex", "BreedingStatus", "Season", "Tail", "Wing",  "Tarsus", "Beak", "Weight", "Month", "Location", "Testosterone.ng.g.", "Corticosterone.ng.g.", "Gradient", "Age", "Date"))
+colnames(Testosterone) = c("BirdID", "Sex", "BreedingStatus", "Season", "Tail", "Wing", "Tarsus", "Beak", "Mass", "Month", "Location", "Testo", "CC", "Gradient", "Age", "Date")
+
+Testosterone$LogT = log(Testosterone$Testo)
+Testosterone = subset(Testosterone, Location != "Lansing")
+Testosterone = subset(Testosterone, Age == "Adult")
+```
+
+```{r}
+ggplot(Testosterone, aes(x=Sex, y=LogT, fill = Sex)) + 
+  geom_boxplot() +
+  theme_classic () +
+  # scale_x_discrete(limits =c("April", "May", "June", "July", "August", "November")) +
+  theme(panel.background = element_blank(), panel.grid.major = element_blank(),
+        axis.line = element_line(colour = "black"), legend.key = element_blank(),
+        legend.background = ) +
+  #scale_fill_manual(values=c("firebrick4", "darkgreen")) +
+  scale_fill_manual(values=c("darkslateblue","lavenderblush4")) +
+  # geom_jitter(position=position_jitter(0.0), size = 2) +
+  theme(axis.text.x = element_text(size = 16, color = "black"),
+        axis.title.x = element_text(size = 20, color = "black", face = "bold")) +
+  theme(axis.text.y  = element_text(size = 16, color = "black"),
+        axis.title.y = element_text(size = 20, color = "black", face = "bold"))+
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  labs(title = " ") +
+  ylab("Log Testosterone Feathers (ng/g)") +
+  xlab(" ")
+```
+
+
+###Scale Mass Index
+```{r, echo=FALSE}
+LinearMean = 12.66444	
+SMA = 0.6369778
+
+SMI = Testosterone %>%
+  mutate(ScaleMassIndex = Mass*(LinearMean/Beak)^SMA) %>%
+  filter(!is.na(ScaleMassIndex))
+```
+
+###Test Normality 
+```{r}
+shapiro.test(as.numeric(SMI$LogT)) 
+shapiro.test(as.numeric(SMI$ScaleMassIndex)) 
+```
+**ANS:** Data are not normally distributed for Scale Mass Index.  
+
+###Test Variance
+```{r}
+leveneTest(LogT ~ Season, data = SMI)
+leveneTest(ScaleMassIndex ~ Season, data = SMI)
+```
+**ANS:** Data do not have equal variance for Log-testosterone
+
+###Equation for Linear Regression
+```{r}
+my.formula <- y ~ x
+```
+
+*** 
+
+###Regression Plot Testosterone by ScaleMassIndex
+```{r, fig.width = 7, echo = FALSE}
+ggscatter(SMI, x = "LogT", y = "ScaleMassIndex", 
+          add = "reg.line", conf.int = T, 
+          cor.coef = T, cor.method = "spearman",
+          xlab = "Testosterone (ng/g) Feathers", ylab = "Scaled-mass Index") +
+  stat_poly_eq(formula = my.formula, 
+               aes(label = paste(..rr.label..)), 
+               parse = T, label.x.npc = .09, label.y.npc = .9)
+```
+
+***
+<!-- ###Regression Plot Testosterone by Log Corticosterone -->
+<!-- ```{r, fig.width = 7, echo = FALSE} -->
+<!-- ggscatter(Testosterone, x = "LogT", y = "LogCC",  -->
+<!--           add = "reg.line", conf.int = T,  -->
+<!--           cor.coef = T, cor.method = "spearman", -->
+<!--           xlab = "Testosterone (ng/g) Feathers", ylab = "Corticosterone (ng/g) Feathers") + -->
+<!--   stat_poly_eq(formula = my.formula,  -->
+<!--                aes(label = paste(..rr.label..)),  -->
+<!--                parse = T, label.x.npc = .09, label.y.npc = .9) -->
+<!-- ``` -->
+
+***
+
+#Gradient
+
+###Summary Statistics 
+```{r}
+Summarize(LogT ~ Gradient,
+          data=Testosterone,
+          digits=3)
+```
+
+###Least Mean Square
+```{r}
+model = lm(LogCC ~ TPlate_Number,
+           data = A_Testosterone)
+
+
+lsmeans(model,
+       pairwise ~ TPlate_Number)
+```
+
+###ANOVA
+```{r}
+A_Testosterone = subset(Testosterone, Age == "Adult")
+A_CC_Testosterone = A_Testosterone %>% filter(!is.na(CCPlate_Number))
+A_T_Testosterone = A_Testosterone %>% filter(!is.na(TPlate_Number))
+```
+
+###Two way ANOVA
+
+```{r}
+res = aov(LogCC ~ Season * CCPlate_Number, data = A_CC_Testosterone )
+summary(res)
+
+res.aov2 <- aov(LogT ~ Season * TPlate_Number, data = A_T_Testosterone)
+summary(res.aov2)
+```
+
+###Student-Newman-Keuls Test
+```{r}
+SNK.test(res, "CCPlate_Number", console = TRUE, group = FALSE)
+
+SNK.test(res.aov2 , "TPlate_Number", console = TRUE, group = FALSE)
+```
+
+###Tukey HSD
+```{r}
+TukeyHSD(res.aov2)
+```
+
+
+###Pairwise T-test
+```{r}
+pairwise.t.test(A_CC_Testosterone$LogCC, A_CC_Testosterone$CCPlate_Number, 
+                p.adjust.method = "fdr")
+
+pairwise.t.test(A_T_Testosterone$LogT, A_T_Testosterone$TPlate_Number, pool.sd = FALSE,
+                p.adjust.method = "fdr")
+```
+
+
+
+
+###Dunn Test
+```{r}
+dunnTest(LogT ~ TPlate_Number,
+         data=A_T_Testosterone ,
+         method="bh")
+```
+
+###Box and Whisker: Gradient
+
+```{r, echo = FALSE}
+ggplot(A_T_Testosterone, aes(x=TPlate_Number, y=LogT)) + 
+  geom_boxplot() +
+  theme_classic () +
+  # scale_x_discrete(limits =c("Urban", "Suburban", "Rural")) +
+  theme(panel.background = element_blank(), panel.grid.major = element_blank(), 
+        axis.line = element_line(colour = "black"), legend.key = element_blank(),
+        legend.background = ) +
+  # scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
+  geom_jitter(position=position_jitter(0.0), size = 12, aes(color = Location, shape = Season)) +
+  theme(axis.text.x = element_text(size = 16, color = "black"), 
+        axis.title.x = element_text(size = 20, color = "black", face = "bold")) +
+  theme(axis.text.y  = element_text(size = 16, color = "black"), 
+        axis.title.y = element_text(size = 20, color = "black", face = "bold"))+ 
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  labs(title = " ") +
+  scale_color_manual(values = c("#bae4bc", "#238b45", "#80b1d3", "#1f78b4"), 
+                     name="Season") +
+  ylab("Log-Testosterone") +
+  xlab(" ") +
+  guides(fill=FALSE)
+```
+```{r, echo = FALSE}
+ggplot(A_CC_Testosterone, aes(x=CCPlate_Number, y=LogCC)) + 
+  geom_boxplot() +
+  theme_classic () +
+  # scale_x_discrete(limits =c("Urban", "Suburban", "Rural")) +
+  theme(panel.background = element_blank(), panel.grid.major = element_blank(), 
+        axis.line = element_line(colour = "black"), legend.key = element_blank(),
+        legend.background = ) +
+  # scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
+  geom_jitter(position=position_jitter(0.0), size = 12, aes(color = Season)) +
+  theme(axis.text.x = element_text(size = 16, color = "black"), 
+        axis.title.x = element_text(size = 20, color = "black", face = "bold")) +
+  theme(axis.text.y  = element_text(size = 16, color = "black"), 
+        axis.title.y = element_text(size = 20, color = "black", face = "bold"))+ 
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  labs(title = " ") +
+  scale_color_manual(values = c("#bae4bc", "#238b45", "#80b1d3", "#1f78b4"), 
+                     name="Season") +
+  ylab("Log-Corticosterone") +
+  xlab(" ") +
+  geom_text(aes(label=ifelse(LogCC < -1 , as.character(BirdID),'')),hjust=0,vjust=0)
+```
+
+***
+
+#Season
+```{r}
+count(A_Testosterone, c("Season", "Gradient"))
+```
+
+##Urban
+```{r}
+Testosterone_Urban = subset(Testosterone, Gradient == "Urban")
+```
+
+###Least Mean Square
+```{r}
+model = lm(LogT ~ Season,
+           data = Testosterone_Urban)
+
+lsmeans(model,
+       pairwise ~ Season)
+```
+
+###Student's T-test
+```{r}
+pairwise.t.test(Testosterone_Urban$LogT, Testosterone_Urban$Season, p.adjust.method = "fdr")
+```
+
+###One-Way ANOVA
+```{r}
+res = aov(LogT ~ Season, data = Testosterone_Urban)
+summary(res)
+```
+
+###Student-Newman-Keuls Test
+```{r}
+SNK.test(res, "Season", console = TRUE, group = FALSE)
+```
+
+###Tukey HSD
+```{r}
+TukeyHSD(res)
+```
+
+###Dunn Test
+```{r}
+dunnTest(LogT ~ Month,
+         data=Testosterone_Urban,
+         method="bh")
+```
+
+
+###Box and Whisker: Urban
+```{r, echo = FALSE, fig.width = 9}
+ggplot(Testosterone_Urban, aes(x=Season, y=LogT)) + 
+  geom_boxplot(color = "black", fill = "gray") +
+  theme_classic () +
+  #scale_x_discrete(limits =c("April", "May", "June", "July")) +
+  theme(panel.background = element_blank(), panel.grid.major = element_blank(), 
+        axis.line = element_line(colour = "black"), legend.key = element_blank(),
+        legend.background = ) +
+  geom_jitter(position=position_jitter(0.0), size = 2) +
+  theme(axis.text.x = element_text(size = 16, color = "black"), 
+        axis.title.x = element_text(size = 20, color = "black", face = "bold")) +
+  theme(axis.text.y  = element_text(size = 16, color = "black"), 
+        axis.title.y = element_text(size = 20, color = "black", face = "bold"))+ 
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  labs(title = " ") +
+  ylab("Log-Testosterone") +
+  xlab(" ") +
+  guides(fill=FALSE)
+```
+
+***
+
+##Suburban
+```{r}
+Testosterone_Suburban = subset(Testosterone, Gradient == "Suburban")
+```
+
+###Least Mean Square
+```{r}
+model = lm(LogT ~ Season,
+           data = Testosterone_Suburban)
+
+lsmeans(model,
+       pairwise ~ Season)
+```
+
+###Student's T-test
+```{r}
+pairwise.t.test(Testosterone_Suburban$LogT, Testosterone_Suburban$Season, p.adjust.method = "fdr")
+```
+
+###One-Way ANOVA
+```{r}
+res = aov(LogT ~ Season, data = Testosterone_Suburban)
+summary(res)
+```
+
+###Student-Newman-Keuls Test
+```{r}
+SNK.test(res, "Season", console = TRUE, group = FALSE)
+```
+
+###Tukey HSD
+```{r}
+TukeyHSD(res)
+```
+
+###Dunn Test
+```{r}
+dunnTest(LogT ~ Month,
+         data=Testosterone_Suburban,
+         method="bh")
+```
+
+
+###Box and Whisker: Urban
+```{r, echo = FALSE, fig.width = 9}
+ggplot(Testosterone_Suburban, aes(x=Season, y=LogT)) + 
+  geom_boxplot(color = "black", fill = "gray") +
+  theme_classic () +
+  #scale_x_discrete(limits =c("April", "May", "June", "July")) +
+  theme(panel.background = element_blank(), panel.grid.major = element_blank(), 
+        axis.line = element_line(colour = "black"), legend.key = element_blank(),
+        legend.background = ) +
+  geom_jitter(position=position_jitter(0.0), size = 2) +
+  theme(axis.text.x = element_text(size = 16, color = "black"), 
+        axis.title.x = element_text(size = 20, color = "black", face = "bold")) +
+  theme(axis.text.y  = element_text(size = 16, color = "black"), 
+        axis.title.y = element_text(size = 20, color = "black", face = "bold"))+ 
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  labs(title = " ") +
+  ylab("Log-Testosterone") +
+  xlab(" ") +
+  guides(fill=FALSE)
+```
+
+***
+
+#Linear Mix Model
+
+```{r}
+# Model1 = lmer(LogT ~ LogCC + (1|Gradient), data = Testosterone, REML = FALSE)
+# 
+# Model2 = lmer(LogT ~ LogCC*Season + (1|Gradient), data = Testosterone, REML = FALSE)
+# 
+# anova(Model1,Model2)
+```
+
+
+
