@@ -8,16 +8,17 @@
 #' @param MEAN Calculated average of numerical column known as y
 #'
 #' @export tabler
-tabler <- function (node, Property, ProjectID = NULL,UniqueProjectID = NULL,
-                    my_y = NULL, MEAN = NULL){
+tabler <- function (node, Property, ProjectID = NULL,
+                    y = NULL, MEAN = NULL){
 
 Property_Name <- dplyr::enquo(Property)
-y <- dplyr::enquo(my_y)
+y <- dplyr::enquo(y)
 
 # Makes a table of descriptive statistics of specified `y`.
   if(!is.null(y) && isTRUE(MEAN) && isFALSE(ProjectID)){
     TableMean <- node %>%
       select(!!Property_Name, !!y) %>%
+      tidyr::drop_na(!!y) %>%
       dplyr::group_by(!!Property_Name) %>%
       dplyr::summarize(N=sum(!is.na(!!y)),
                        Mean=mean(!!y, na.rm=TRUE),
@@ -25,22 +26,27 @@ y <- dplyr::enquo(my_y)
                        Median=median(!!y, na.rm = TRUE),
                        Max = max(!!y, na.rm = TRUE),
                        SD  = sd(!!y, na.rm = TRUE),
-                       SE  = sd / sqrt(N))
+                       SE  = SD / sqrt(N)) %>%
+      dplyr::arrange(desc(N)) %>%
+      data.frame()
 
     return(TableMean)
   }
 
-  else if(!is.null(y) && isTRUE(MEAN) && isTRUE(projectID)){
-    new.df <- data.frame(Property_Name = Property_Name, y, project_id = node$project_id)
-    TableMean = new.df %>%
-      dplyr::group_by(Property_Name, project_id) %>%
-      dplyr::summarize(N=sum(!is.na(y)),
-                       mean=mean(y, na.rm=TRUE),
-                       min = min(y, na.rm = TRUE),
-                       median=median(y, na.rm = TRUE),
-                       max = max(y, na.rm = TRUE),
-                       sd  = sd(y, na.rm = TRUE),
-                       se  = sd / sqrt(N))
+  else if(!is.null(y) && isTRUE(MEAN) && isTRUE(ProjectID)){
+    TableMean <- node %>%
+      select(!!Property_Name, !!y, project_id) %>%
+      tidyr::drop_na(!!y) %>%
+      dplyr::group_by(!!Property_Name, project_id) %>%
+      dplyr::summarize(N=sum(!is.na(!!y)),
+                       Mean=mean(!!y, na.rm=TRUE),
+                       Min = min(!!y, na.rm = TRUE),
+                       Median=median(!!y, na.rm = TRUE),
+                       Max = max(!!y, na.rm = TRUE),
+                       SD  = sd(!!y, na.rm = TRUE),
+                       SE  = SD / sqrt(N)) %>%
+      dplyr::arrange(desc(N)) %>%
+      data.frame()
 
     return(TableMean)
   }
