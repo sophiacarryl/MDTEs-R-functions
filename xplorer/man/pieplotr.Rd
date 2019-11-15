@@ -13,6 +13,9 @@ pieplotr(node, ..., ProjectID = NULL)
 
 \item{Property}{A categorical column}
 }
+\value{
+Nested Pieplot and common Pieplot
+}
 \description{
 Pie plot and nested pie plot
 }

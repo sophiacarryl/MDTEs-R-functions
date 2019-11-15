@@ -6,6 +6,8 @@
 #' @param MEAN Calculated average of numerical column known as y
 #' @param Interactive An interactive html plot. Specificy TRUE or FALSE
 #'
+#' @return Barplots of Count, MEAN
+#'
 #' @importFrom dplyr select
 #' @importFrom stats aggregate median reorder sd
 #'

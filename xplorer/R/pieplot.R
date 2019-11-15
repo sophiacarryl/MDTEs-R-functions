@@ -4,6 +4,8 @@
 #' @param Property A categorical column
 #' @param ProjectID Specify TRUE or FALSE to include Project ID into pieplot
 #'
+#' @return Nested Pieplot and common Pieplot
+#'
 #' @importFrom dplyr select
 #' @importFrom stats aggregate median reorder sd
 #'

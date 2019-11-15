@@ -4,21 +4,40 @@
 \alias{tabler}
 \title{Table}
 \usage{
-tabler(node, Property, ProjectID = NULL, y = NULL, MEAN = NULL)
+tabler(node, Property, ProjectID = NULL, y = NULL, STAT = NULL)
 }
 \arguments{
 \item{node}{A dataframe}
 
 \item{ProjectID}{Specify TRUE or FALSE to include Project ID in count}
 
-\item{y}{A numerical column. Specify FALSE or node$columnname}
+\item{y}{A numerical column}
 
-\item{MEAN}{Calculated average of numerical column known as y}
+\item{STAT}{Calculated average of numerical column known as y}
 
 \item{Property_Name}{A categorical column}
 
 \item{UniqueProjectID}{Specify TRUE or FALSE to count number of Unique Project IDs - CURRENTLY DEPRACATED}
 }
+\value{
+Table as data.frame
+}
 \description{
 Table
+}
+\examples{
+Calculate the statistics of numerical variable, y,  for Property, assay_kit_name, without ProjectID using a dataframe (aka node), QuantData.
+
+tabler(QuantData,
+assay_kit_name,
+STAT = TRUE,
+ProjectID = FALSE,
+y = molecular_concentration)
+
+Calculate the count of Property, assay_kit_name, with ProjectID = TRUE.
+
+tabler(QuantData,
+assay_kit_name,
+ProjectID = TRUE)
+
 }

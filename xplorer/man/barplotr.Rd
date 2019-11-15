@@ -17,6 +17,9 @@ barplotr(node, Property, y = NULL, MEAN = NULL, Interactive = NULL)
 
 \item{Interactive}{An interactive html plot. Specificy TRUE or FALSE}
 }
+\value{
+Barplots of Count, MEAN
+}
 \description{
 Bar plot
 }

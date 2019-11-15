@@ -4,18 +4,36 @@
 #' @param Property_Name A categorical column
 #' @param ProjectID Specify TRUE or FALSE to include Project ID in count
 #' @param UniqueProjectID Specify TRUE or FALSE to count number of Unique Project IDs - CURRENTLY DEPRACATED
-#' @param y A numerical column. Specify FALSE or node$columnname
-#' @param MEAN Calculated average of numerical column known as y
+#' @param y A numerical column
+#' @param STAT Calculated average of numerical column known as y
+#'
+#' @examples
+#' Calculate the statistics of numerical variable, y,  for Property, assay_kit_name, without ProjectID using a dataframe (aka node), QuantData.
+#'
+#' tabler(QuantData,
+#' assay_kit_name,
+#' STAT = TRUE,
+#' ProjectID = FALSE,
+#' y = molecular_concentration)
+#'
+#' @examples
+#' Calculate the count of Property, assay_kit_name, with ProjectID = TRUE.
+#'
+#' tabler(QuantData,
+#' assay_kit_name,
+#' ProjectID = TRUE)
+#'
+#' @return Table as data.frame
 #'
 #' @export tabler
 tabler <- function (node, Property, ProjectID = NULL,
-                    y = NULL, MEAN = NULL){
+                    y = NULL, STAT = NULL){
 
 Property_Name <- dplyr::enquo(Property)
 y <- dplyr::enquo(y)
 
 # Makes a table of descriptive statistics of specified `y`.
-  if(!is.null(y) && isTRUE(MEAN) && isFALSE(ProjectID)){
+  if(!is.null(y) && isTRUE(STAT) && isFALSE(ProjectID)){
     TableMean <- node %>%
       select(!!Property_Name, !!y) %>%
       tidyr::drop_na(!!y) %>%
@@ -33,7 +51,7 @@ y <- dplyr::enquo(y)
     return(TableMean)
   }
 
-  else if(!is.null(y) && isTRUE(MEAN) && isTRUE(ProjectID)){
+  else if(!is.null(y) && isTRUE(STAT) && isTRUE(ProjectID)){
     TableMean <- node %>%
       select(!!Property_Name, !!y, project_id) %>%
       tidyr::drop_na(!!y) %>%
