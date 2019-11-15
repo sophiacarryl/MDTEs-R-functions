@@ -37,7 +37,7 @@ colors <- c("#91a3b0","#537b5d","#6d9c79","#344c3a","#a1caf1","#98777b","#a2a2d0
               "#1E78D2", "#77AADD", "#117777","#D21E2C","#DD7788","#777711")
 
 Property_Name <- dplyr::enquo(Property)
-# y_variable <- dplyr::enquo(y_variable)
+y_variable <- dplyr::enquo(y_variable)
 
 PropertyName_Table <- node %>% #Creates a dataframe that counts Property_Name that will be used in ggplot2::annotate to specify text location on the y axis. y= PropertyName_Table$Count
     dplyr::group_by(!!Property_Name) %>%
@@ -61,11 +61,11 @@ ProjectID_Count <- PropertyName_ProjectID_Table %>% #Creates a dataframe using t
   # 1. Plot Count
 
 
-if(isFALSE(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)){
+if(is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)){
 
    graph <- ggplot2::ggplot(node, aes(x = reorder(!!Property_Name,!!Property_Name,function(x)-length(x)),
                             fill = project_id)) +
-            geom_bar() +
+            ggplot2::geom_bar() +
             theme_light() +
             ggplot2::annotate("text", x=ProjectID_Count$Property_Name, y= PropertyName_Table$Count, na.rm = TRUE,
                               label=paste("# Projects: ", ProjectID_Count$pCount), size = 3,vjust = -1) +
@@ -86,7 +86,7 @@ if(isFALSE(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)){
 
 }
 
-else if(isFALSE(y_variable) && isFALSE(MEAN) && isTRUE(Interactive)) {
+else if(is.null(y_variable) && isFALSE(MEAN) && isTRUE(Interactive)) {
 
    graph <- plotly::ggplotly(ggplot2::ggplot(node, aes(x = reorder(!!Property_Name,!!Property_Name,function(x)-length(x)),
                                                      fill = project_id)) +
@@ -124,7 +124,7 @@ else if (!is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)) {
   print("Plotted below is a boxplot to show distribution of Y")
 
     graph <- ggplot2::ggplot(node, ggplot2::aes(x = !!Property_Name, !!y_variable)) +
-      ggplot2::geom_boxplot(ggplot2::aes(fill = node$project_id)) +
+      ggplot2::geom_boxplot(ggplot2::aes(fill = !!Property_Name)) +
       ggplot2::theme_bw() +
       ggplot2::geom_jitter(position=ggplot2::position_jitter(0.0), size = 2) +
       ggplot2::theme(legend.position = "bottom") +
@@ -142,7 +142,7 @@ else if (!is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)) {
     print("Plotted below is a boxplot to show distribution of Y")
 
     graph <- plotly::ggplotly(ggplot2::ggplot(node, ggplot2::aes(x = !!Property_Name, !!y_variable)) +
-                                ggplot2::geom_boxplot(ggplot2::aes(fill = node$project_id)) +
+                                ggplot2::geom_boxplot(ggplot2::aes(fill = !!Property_Name)) +
                                 ggplot2::theme_bw() +
                                 ggplot2::geom_jitter(position=ggplot2::position_jitter(0.0), size = 3) +
                                 ggplot2::theme(legend.position = "bottom") +

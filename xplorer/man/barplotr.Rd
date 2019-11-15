@@ -4,7 +4,7 @@
 \alias{barplotr}
 \title{Bar plot}
 \usage{
-barplotr(node, Property, y_vari = NULL, MEAN = NULL,
+barplotr(node, Property, y_variable = NULL, MEAN = NULL,
   Interactive = NULL)
 }
 \arguments{

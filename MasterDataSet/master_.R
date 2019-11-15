@@ -29,12 +29,11 @@ xplorer::pieplotr(BiospecimenData,
 xplorer::barplotr(QuantData,
          assay_kit_name,
          y_vari =  molecular_concentration,
-         Interactive = TRUE,
+         Interactive = FALSE,
          MEAN = TRUE)
 
 xplorer::barplotr(QuantData,
          Property = assay_kit_name,
-         y_vari = FALSE,
          Interactive = FALSE,
          MEAN = FALSE)
 
