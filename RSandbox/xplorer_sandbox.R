@@ -549,11 +549,16 @@ TableCount <- node %>%
   dplyr::arrange(desc(Count)) %>%
   data.frame()
 
+n = TableCount %>% Unique = summarise(dplyr::n(!!Property_Name))
+n_count = c("Number of Response Variables:", Unique)
+print(n_count, quote = FALSE)
+
 return(TableCount)
 }
 
 head(tabler_count(QuantData,
-       assay_kit_nam))
+       assay_kit_name))
+
 
 
 QuantData %>%

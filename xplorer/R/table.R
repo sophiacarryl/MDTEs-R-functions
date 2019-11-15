@@ -51,27 +51,27 @@ y <- dplyr::enquo(y)
     return(TableMean)
   }
 
-  else if(isTRUE(projectID)){
-    TableID = data.frame(plyr::count(node, c("project_id","Property_Name")))
-    TableID = subset(TableID, Property_Name != "NA")
-    TableID$project_id = gsub("-", "_", TableID$project_id)
-    TableID = dplyr::arrange(TableID, dplyr::desc(TableID$freq))
-    names(TableID)[1] = "Project_ID"
-    names(TableID)[3] = "Counts"
-    N = length(unique(TableID$Project_ID))
+  else if(isTRUE(ProjectID)){
+    TableID <- node %>%
+      dplyr::select(!!Property_Name, project_id) %>%
+      dplyr::group_by(!!Property_Name, project_id) %>%
+      dplyr::summarise(Count = dplyr::n()) %>%
+      dplyr::arrange(desc(Count)) %>%
+      data.frame()
+    N = length(unique(TableID$project_id))
     n = c("Number Unique Projects:", N)
     print(n, quote = FALSE)
 
     return(TableID)
   }
 
-  else if (isFALSE(projectID)){
-    Table = data.frame(plyr::count(node, "Property_Name"))
-    Table = dplyr::arrange(Table, dplyr::desc(Table$freq))
-    names(Table)[2] = "Counts"
-    N = length(unique(Table$Property_Name))
-    n = c("Number of Response Variables:", N)
-    print(n, quote = FALSE)
+  else if (isFALSE(ProjectID)){
+    Table <- node %>%
+      dplyr::select(!!Property_Name) %>%
+      dplyr::group_by(!!Property_Name) %>%
+      dplyr::summarise(Count = dplyr::n()) %>%
+      dplyr::arrange(desc(Count)) %>%
+      data.frame()
 
     return(Table)
   }
