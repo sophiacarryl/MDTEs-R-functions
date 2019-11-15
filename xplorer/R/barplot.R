@@ -10,21 +10,25 @@
 #' @examples
 #'
 #'
+#'
+#' @examples
+#'
+#'
 #' @return Barplots of Count, MEAN
 #'
 #' @importFrom dplyr select
 #' @importFrom stats aggregate median reorder sd
 #'
 #' @export barplotr
-barplotr <- function (node, Property, y = NULL, MEAN = NULL, Interactive = NULL){
+barplotr <- function (node, Property, y_variable = NULL, MEAN = NULL, Interactive = NULL){
 
-  custom_final28 = c("blueviolet", "#77AADD", "#117777", "gold1", "darkseagreen4",
+custom_final28 = c("blueviolet", "#77AADD", "#117777", "gold1", "darkseagreen4",
                      "#77CCCC" ,"#771155", "#AA4488", "#EA6CC0", "#CC99BB","#88CCAA",
                      "#771122", "#AA4455", "plum4", "slateblue", "violetred","#5F7FC7",
                      "#D2781E", "#DDAA77","#CBD588", "#CC99BB", "#114477", "#4477AA",
                      "#1E78D2", "#77AADD", "#117777","#D21E2C","#DD7788","#777711","#E69F00")
 
-  colors <- c("#91a3b0","#537b5d","#6d9c79","#344c3a","#a1caf1","#98777b","#a2a2d0","#66023c","#00755e",
+colors <- c("#91a3b0","#537b5d","#6d9c79","#344c3a","#a1caf1","#98777b","#a2a2d0","#66023c","#00755e",
               "#9966cc","#ffbf00","#cd9575","#e9d66b","#ff9966","#e2725b","#464EB4","#ecd540","#aa98a9",
               "#44AAAA", "#629c92", "#77AADD", "#117777", "#18402c", "#eb9886","#77CCCC" ,"#771155",
               "#AA4488", "#EA6CC0", "#CC99BB","#88CCAA", "#771122", "#AA4455", "#cf3d1d", "#f2e88a",
@@ -33,7 +37,7 @@ barplotr <- function (node, Property, y = NULL, MEAN = NULL, Interactive = NULL)
               "#1E78D2", "#77AADD", "#117777","#D21E2C","#DD7788","#777711")
 
 Property_Name <- dplyr::enquo(Property)
-y <- dplyr::enquo(y)
+# y_variable <- dplyr::enquo(y_variable)
 
 PropertyName_Table <- node %>% #Creates a dataframe that counts Property_Name that will be used in ggplot2::annotate to specify text location on the y axis. y= PropertyName_Table$Count
     dplyr::group_by(!!Property_Name) %>%
@@ -57,11 +61,11 @@ ProjectID_Count <- PropertyName_ProjectID_Table %>% #Creates a dataframe using t
   # 1. Plot Count
 
 
-if(isFALSE(y) && isFALSE(MEAN) && isFALSE(Interactive)){
+if(isFALSE(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)){
 
-   graph = ggplot2::ggplot(node, aes(x = reorder(!!Property_Name,!!Property_Name,function(x)-length(x)),
+   graph <- ggplot2::ggplot(node, aes(x = reorder(!!Property_Name,!!Property_Name,function(x)-length(x)),
                             fill = project_id)) +
-            ggplot2::geom_bar(width = .8) +
+            geom_bar() +
             theme_light() +
             ggplot2::annotate("text", x=ProjectID_Count$Property_Name, y= PropertyName_Table$Count, na.rm = TRUE,
                               label=paste("# Projects: ", ProjectID_Count$pCount), size = 3,vjust = -1) +
@@ -82,9 +86,9 @@ if(isFALSE(y) && isFALSE(MEAN) && isFALSE(Interactive)){
 
 }
 
-else if(isFALSE(y) && isFALSE(MEAN) && isTRUE(Interactive)) {
+else if(isFALSE(y_variable) && isFALSE(MEAN) && isTRUE(Interactive)) {
 
-   graph = plotly::ggplotly(ggplot2::ggplot(node, aes(x = reorder(!!Property_Name,!!Property_Name,function(x)-length(x)),
+   graph <- plotly::ggplotly(ggplot2::ggplot(node, aes(x = reorder(!!Property_Name,!!Property_Name,function(x)-length(x)),
                                                      fill = project_id)) +
             ggplot2::geom_bar(width = .8) +
             theme_light() +
@@ -113,10 +117,13 @@ else if(isFALSE(y) && isFALSE(MEAN) && isTRUE(Interactive)) {
   # 2. Plot Y in a boxplot
 
 
-else if (!is.null(y) && isFALSE(MEAN) && isFALSE(Interactive)) {
+else if (!is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)) {
     # print(node)
     # print(y)
-    graph <- ggplot2::ggplot(node, ggplot2::aes(x = !!Property_Name, !!y)) +
+
+  print("Plotted below is a boxplot to show distribution of Y")
+
+    graph <- ggplot2::ggplot(node, ggplot2::aes(x = !!Property_Name, !!y_variable)) +
       ggplot2::geom_boxplot(ggplot2::aes(fill = node$project_id)) +
       ggplot2::theme_bw() +
       ggplot2::geom_jitter(position=ggplot2::position_jitter(0.0), size = 2) +
@@ -130,9 +137,11 @@ else if (!is.null(y) && isFALSE(MEAN) && isFALSE(Interactive)) {
     return(graph)
   }
 
-  else if (!is.null(y) && isFALSE(MEAN) && isTRUE(Interactive)) {
+  else if (!is.null(y_variable) && isFALSE(MEAN) && isTRUE(Interactive)) {
+
     print("Plotted below is a boxplot to show distribution of Y")
-    graph <- plotly::ggplotly(ggplot2::ggplot(node, ggplot2::aes(x = !!Property_Name, !!y)) +
+
+    graph <- plotly::ggplotly(ggplot2::ggplot(node, ggplot2::aes(x = !!Property_Name, !!y_variable)) +
                                 ggplot2::geom_boxplot(ggplot2::aes(fill = node$project_id)) +
                                 ggplot2::theme_bw() +
                                 ggplot2::geom_jitter(position=ggplot2::position_jitter(0.0), size = 3) +
@@ -154,9 +163,9 @@ else if (!is.null(y) && isFALSE(MEAN) && isFALSE(Interactive)) {
   # 3. Plot Mean of Y
 
 
-else if (!is.null(y) && isTRUE(MEAN) && isFALSE(Interactive)) {
+else if (!is.null(y_variable) && isTRUE(MEAN) && isFALSE(Interactive)) {
 
-    graph <- ggplot2::ggplot(node, ggplot2::aes(reorder(x = project_id, (!!-y)), !!y)) +
+    graph <- ggplot2::ggplot(node, ggplot2::aes(reorder(x = project_id, (!!-y_variable)), !!y_variable)) +
              ggplot2::theme_bw() +
              ggplot2::stat_summary(geom = "bar", fun.y = mean, na.rm = TRUE, ggplot2::aes(fill = !!Property_Name)) +
              ggplot2::stat_summary(geom = "errorbar", fun.data = mean_se) +
@@ -175,8 +184,8 @@ else if (!is.null(y) && isTRUE(MEAN) && isFALSE(Interactive)) {
     return(graph)
   }
 
-else if (!is.null(y) && isTRUE(MEAN) && isTRUE(Interactive)) {
-    graph <- plotly::ggplotly(ggplot2::ggplot(node, ggplot2::aes(reorder(x = !!Property_Name, -(!!y)), !!y)) +
+else if (!is.null(y_variable) && isTRUE(MEAN) && isTRUE(Interactive)) {
+    graph <- plotly::ggplotly(ggplot2::ggplot(node, ggplot2::aes(reorder(x = !!Property_Name, -(!!y_variable)), !!y_variable)) +
              ggplot2::theme_bw() +
              ggplot2::stat_summary(geom = "bar", fun.y = mean, ggplot2::aes(fill = !!Property_Name)) +
              ggplot2::stat_summary(geom = "errorbar", fun.data = mean_se) +

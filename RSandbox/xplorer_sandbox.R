@@ -568,3 +568,24 @@ QuantData %>%
 n_count = c("Number of Response Variables:", Unique)
 print(n_count, quote = FALSE)
 
+
+####
+
+ggplot2::ggplot(AliquotData, aes(x = reorder(contrivance_method,contrivance_method,function(x)-length(x)),
+                                  fill = project_id)) +
+  ggplot2::geom_bar(width = .8) +
+  theme_light() +
+  # ggplot2::annotate("text", x=ProjectID_Count$Property_Name, y= PropertyName_Table$Count, na.rm = TRUE,
+  #                   label=paste("# Projects: ", ProjectID_Count$pCount), size = 3,vjust = -1) +
+  # labs(x = Property_Name, y = "Counts") +
+  ggplot2::theme(text = element_text(family = "Times")) +
+  # ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 9),
+                 # axis.text.y = ggplot2::element_text(size = 15)) +
+  ggplot2::theme(axis.title.x = ggplot2::element_text(size=20, face = "bold", vjust = 5),
+                 axis.title.y = ggplot2::element_text(size=15, vjust = 2)) +
+  ggplot2::theme(legend.text = ggplot2::element_text(color = "black", size = 12)) +
+  ggplot2::theme(legend.position = "bottom") +
+  ggplot2::theme(legend.background = ggplot2::element_rect(linetype="longdash",colour ="darkgrey")) +
+  ggplot2::guides(fill = guide_legend(title = "Project IDs", title.position = "top", title.hjust = .5,
+                                      title.theme = element_text(size = 15, face = "bold"))) +
+  ggplot2::scale_fill_manual(values = colors)
