@@ -23,7 +23,7 @@ tabler(node, Property, ProjectID = NULL, y = NULL, STAT = NULL)
 Table as data.frame
 }
 \description{
-Table
+Tabulates count and/or statistics (STAT) of a Property and a numerical variable (y).
 }
 \examples{
 Calculate the statistics of numerical variable, y,  for Property, assay_kit_name, without ProjectID using a dataframe (aka node), QuantData.

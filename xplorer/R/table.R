@@ -1,4 +1,5 @@
 #' Table
+#' @description Tabulates count and/or statistics (STAT) of a Property and a numerical variable (y).
 #'
 #' @param node A dataframe
 #' @param Property_Name A categorical column
