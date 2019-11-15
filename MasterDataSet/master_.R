@@ -26,11 +26,16 @@ xplorer::pieplotr(BiospecimenData,
          disease_type,
          ProjectID = TRUE)
 
-barplotr(QuantData,
+xplorer::barplotr(QuantData,
          assay_kit_name,
          y = molecular_concentration,
          Interactive = FALSE,
          MEAN = TRUE)
+
+xplorer::barplotr(QuantData,
+         assay_kit_name,
+         Interactive = FALSE,
+         MEAN = FALSE)
 
 xplorer::tabler(QuantData,
        assay_kit_name,

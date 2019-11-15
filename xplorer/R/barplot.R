@@ -1,10 +1,14 @@
 #' Bar plot
+#' @description Creates barplots for count or mean with SE that can be interactive or not.
 #'
 #' @param node A data frame
 #' @param Property A categorical column
-#' @param y A numerical column. Specificy FALSE or node$columnname
+#' @param y A numerical column.
 #' @param MEAN Calculated average of numerical column known as y
 #' @param Interactive An interactive html plot. Specificy TRUE or FALSE
+#'
+#' @examples
+#'
 #'
 #' @return Barplots of Count, MEAN
 #'

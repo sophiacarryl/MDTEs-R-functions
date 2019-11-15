@@ -11,7 +11,7 @@ barplotr(node, Property, y = NULL, MEAN = NULL, Interactive = NULL)
 
 \item{Property}{A categorical column}
 
-\item{y}{A numerical column. Specificy FALSE or node$columnname}
+\item{y}{A numerical column.}
 
 \item{MEAN}{Calculated average of numerical column known as y}
 
@@ -21,5 +21,9 @@ barplotr(node, Property, y = NULL, MEAN = NULL, Interactive = NULL)
 Barplots of Count, MEAN
 }
 \description{
-Bar plot
+Creates barplots for count or mean with SE that can be interactive or not.
+}
+\examples{
+
+
 }
