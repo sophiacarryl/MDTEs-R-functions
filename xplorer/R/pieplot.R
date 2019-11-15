@@ -1,10 +1,25 @@
 #' Pie plot and nested pie plot
+#' @description Creates a pie plot (ProjectID = FALSE) or a nested pie plot (ProjectID = TRUE) to demonstrate proportion of property.
 #'
 #' @param node A dataframe
-#' @param Property A categorical column
+#' @param ... is a property or properties. Usually a categorical variable
 #' @param ProjectID Specify TRUE or FALSE to include Project ID into pieplot
 #'
-#' @return Nested Pieplot and common Pieplot
+#' @examples
+#' Nested pie plot the proportion of Properties, blood_tube_type & tissue_type, when ProjectID = TRUE
+#'
+#' pieplotr(BiospecimenData,
+#' blood_tube_type,tissue_type
+#' ProjectID = TRUE)
+#'
+#' @examples
+#' Common pie plot of the proportion of Property, disease_type, when ProjectID = FALSE. Note: multiple properties cannot be passed successfully when ProjectID = FALSE.
+#'
+#' pieplotr(BiospecimenData,
+#' disease_type,
+#' ProjectID = FALSE)
+#'
+#' @return Nested pie plot and common pie plot
 #'
 #' @importFrom dplyr select
 #' @importFrom stats aggregate median reorder sd

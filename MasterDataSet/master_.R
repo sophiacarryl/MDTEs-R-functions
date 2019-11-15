@@ -23,8 +23,8 @@ BiospecimenData$disease_type[BiospecimenData$disease_type == ""] <- "Unknown"
 Property <- QuantData$assay_kit_name
 
 xplorer::pieplotr(BiospecimenData,
-         blood_tube_type,
-         ProjectID = FALSE)
+         disease_type,
+         ProjectID = TRUE)
 
 barplotr(QuantData,
          assay_kit_name,
