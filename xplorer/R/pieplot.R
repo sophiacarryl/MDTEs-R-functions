@@ -19,7 +19,7 @@
 #' disease_type,
 #' ProjectID = FALSE)
 #'
-#' @return Nested pie plot and common pie plot
+#' @return Nested pie plot and common pie eplot
 #'
 #' @importFrom dplyr select
 #' @importFrom stats aggregate median reorder sd
