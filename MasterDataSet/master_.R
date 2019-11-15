@@ -34,9 +34,9 @@ barplotr(QuantData,
 
 xplorer::tabler(QuantData,
        assay_kit_name,
-       MEAN = TRUE,
+       STAT = TRUE,
        ProjectID = FALSE,
-       my_y = molecular_concentration)
+       y = molecular_concentration)
 
 xplorer::tabler(QuantData,
                 assay_kit_name,
