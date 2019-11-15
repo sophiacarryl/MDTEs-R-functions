@@ -9,22 +9,23 @@
 #'
 #' @export tabler
 tabler <- function (node, Property, ProjectID = NULL,UniqueProjectID = NULL,
-                    y = NULL, MEAN = NULL){
+                    my_y = NULL, MEAN = NULL){
 
-Property_Name <- enquos(Property)
+Property_Name <- dplyr::enquo(Property)
+y <- dplyr::enquo(my_y)
 
 # Makes a table of descriptive statistics of specified `y`.
-  if(!is.null(y) && isTRUE(MEAN) && isFALSE(projectID)){
-    new.df <- data.frame(Property_Name = !!Property_Name, y)
-    TableMean = new.df %>%
+  if(!is.null(y) && isTRUE(MEAN) && isFALSE(ProjectID)){
+    TableMean <- node %>%
+      select(!!Property_Name, !!y) %>%
       dplyr::group_by(!!Property_Name) %>%
-      dplyr::summarize(N=sum(!is.na(y)),
-                       mean=mean(y, na.rm=TRUE),
-                       min = min(y, na.rm = TRUE),
-                       median=median(y, na.rm = TRUE),
-                       max = max(y, na.rm = TRUE),
-                       sd  = sd(y, na.rm = TRUE),
-                       se  = sd / sqrt(N))
+      dplyr::summarize(N=sum(!is.na(!!y)),
+                       Mean=mean(!!y, na.rm=TRUE),
+                       Min = min(!!y, na.rm = TRUE),
+                       Median=median(!!y, na.rm = TRUE),
+                       Max = max(!!y, na.rm = TRUE),
+                       SD  = sd(!!y, na.rm = TRUE),
+                       SE  = sd / sqrt(N))
 
     return(TableMean)
   }

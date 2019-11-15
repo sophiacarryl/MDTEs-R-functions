@@ -34,10 +34,12 @@ barplotr(QuantData,
 
 xplorer::tabler(QuantData,
        assay_kit_name,
-       y = molecular_concentration)
+       MEAN = TRUE,
+       ProjectID = FALSE,
+       my_y = molecular_concentration)
 
 
-AnalyteData %>%x
+AnalyteData %>%
   group_by(days_to_assay, project_id) %>%
   summarize(N = sum(!is.na(days_to_assay)))
 
