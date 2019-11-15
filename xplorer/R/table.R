@@ -8,16 +8,16 @@
 #' @param MEAN Calculated average of numerical column known as y
 #'
 #' @export tabler
-tabler <- function (node, ..., ProjectID = NULL,UniqueProjectID = NULL,
+tabler <- function (node, Property, ProjectID = NULL,UniqueProjectID = NULL,
                     y = NULL, MEAN = NULL){
 
-Property_Name <- enquos(...)
+Property_Name <- enquos(Property)
 
 # Makes a table of descriptive statistics of specified `y`.
   if(!is.null(y) && isTRUE(MEAN) && isFALSE(projectID)){
-    new.df <- data.frame(Property_Name = !!!Property_Name, y)
+    new.df <- data.frame(Property_Name = !!Property_Name, y)
     TableMean = new.df %>%
-      dplyr::group_by(!!!Property_Name) %>%
+      dplyr::group_by(!!Property_Name) %>%
       dplyr::summarize(N=sum(!is.na(y)),
                        mean=mean(y, na.rm=TRUE),
                        min = min(y, na.rm = TRUE),

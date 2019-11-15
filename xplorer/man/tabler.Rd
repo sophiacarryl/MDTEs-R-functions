@@ -4,21 +4,14 @@
 \alias{tabler}
 \title{Table}
 \usage{
-tabler(node, ..., ProjectID = NULL, UniqueProjectID = NULL, y = NULL,
-  MEAN = NULL)
+tabler(node, ..., y)
 }
 \arguments{
 \item{node}{A dataframe}
 
-\item{ProjectID}{Specify TRUE or FALSE to include Project ID in count}
-
-\item{UniqueProjectID}{Specify TRUE or FALSE to count number of Unique Project IDs}
+\item{...}{A single property or multiple properties including project_id}
 
 \item{y}{A numerical column. Specify FALSE or node$columnname}
-
-\item{MEAN}{Calculated average of numerical column known as y}
-
-\item{Property_Name}{A categorical column}
 }
 \description{
 Table

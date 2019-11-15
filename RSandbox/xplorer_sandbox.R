@@ -1,9 +1,22 @@
+#
+library("ggplot2")
+library("tidyr")
+library("plotly")
+library("rlang")
+
+AnalyteData  <- read.csv("../MasterDataSet/master_analyte.csv", sep = ",")
+AliquotData <- read.csv("../MasterDataSet/master_aliquot.csv", sep = ",")
+BiospecimenData <- read.csv("../MasterDataSet/master_biospecimen.csv", sep = ",")
+SampleData <- read.csv("../MasterDataSet/master_sample.csv", sep = ",")
+QuantData <- read.csv("../MasterDataSet/master_quantification_assay.csv", sep = ",")
+
+##########
 tidy_ply2 <- function(data, x) {
   x = enquo(x)
   print(x)
-  
+
   data = filter(data, !!x > 5)
-  
+
   # # https://rlang.r-lib.org/reference/quasiquotation.html
   # cat('\nUse qq_show() to debug the effect of unquoting operators\n')
   # qq_show(plot_ly(data, x = ~!!x, y = ~!!x/2))
@@ -39,12 +52,9 @@ quo_name(quo(sym))
 quo_name(quo(!! sym))
 
 
-
-
-
-
-
-else if (isFALSE(y) && isFALSE(MEAN) && isTRUE(Interactive)){
+##############
+fun(...) <- function {
+  else if (isFALSE(y) && isFALSE(MEAN) && isTRUE(Interactive)){
   graph <- plotly::ggplotly(ggplot2::ggplot(node, ggplot2::aes(x =  Property_Response_Variable, fill = node$project_id)) +
                               ggplot2::geom_bar(width = .8) +
                               ggplot2::theme_bw() +
@@ -59,7 +69,7 @@ else if (isFALSE(y) && isFALSE(MEAN) && isTRUE(Interactive)){
                               ggplot2::scale_fill_manual(values = custom_final28))
   st=format(Sys.time(), "%Y-%m-%d_%H:%M")
   htmlwidgets::saveWidget(as_widget(graph), paste("Count_BarGraph_", st, ".html", sep = ""))
-  
+
   return(graph)
 }
 
@@ -78,7 +88,7 @@ else if (!is.null(y) && isFALSE(MEAN) && isFALSE(Interactive)) {
                    legend.text = ggplot2::element_text(color = "black", size = 5)) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
     ggplot2::scale_fill_manual(values = custom_final28)
-  
+
   return(graph)
 }
 
@@ -96,10 +106,11 @@ else if (!is.null(y) && isFALSE(MEAN) && isTRUE(Interactive)) {
                               ggplot2::scale_fill_manual(values = custom_final28))
   st=format(Sys.time(), "%Y-%m-%d_%H:%M")
   htmlwidgets::saveWidget(as_widget(graph), paste("Boxplot_", st, ".html", sep = ""))
-  
-  
+
+
   return(graph)
 }
+
 
 # Plot Mean of Y
 
@@ -115,7 +126,7 @@ else if (!is.null(y) && isTRUE(MEAN) && isFALSE(Interactive)) {
     ggplot2::theme(legend.title = ggplot2::element_text(color = "black", size = 10),
                    legend.text = ggplot2::element_text(color = "black", size = 5)) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-  
+
   return(graph)
 }
 
@@ -155,7 +166,7 @@ if(isTRUE(ProjectID)){
   sunny = sunburstR::sund2b(data,colors = colors)
   st=format(Sys.time(), "%Y-%m-%d_%H:%M")
   htmlwidgets::saveWidget(as_widget(sunny), paste("PiePlot_", st, ".html", sep = ""))
-  
+
   return(sunny)
 }
 
@@ -170,7 +181,7 @@ else if(isFALSE(ProjectID)){
                         type = 'pie')
   st=format(Sys.time(), "%Y-%m-%d_%H:%M")
   htmlwidgets::saveWidget(as_widget(Pie), paste("PiePlot_", st, ".html", sep = ""))
-  
+
   return(Pie)
 }
 else {
@@ -260,22 +271,14 @@ mySum <- function(df, grouppie){
 #
 mySum(df, Name)
 
-#
-AnalyteData  <- read.csv("../MasterDataSet/master_analyte.csv", sep = ",")
-AliquotData <- read.csv("../MasterDataSet/master_aliquot.csv", sep = ",")
-BiospecimenData <- read.csv("../MasterDataSet/master_biospecimen.csv", sep = ",")
-SampleData <- read.csv("../MasterDataSet/master_sample.csv", sep = ",")
-QuantData <- read.csv("../MasterDataSet/master_quantification_assay.csv", sep = ",")
+
 
 #
 mySum(AnalyteData, cell_type)
 
 
 
-library("ggplot2")
-library("tidyr")
-library("plotly")
-library("rlang")
+
 #
 
 
@@ -510,22 +513,22 @@ pie(Prop, labels = Labels, col= colors)
 
 tabler <- function (node, ..., y){
 
-Property_Name <- dplyr::enquos(...)
-y <- dplyr::enquo(y)
+  Property_Name <- dplyr::enquos(...)
+  y <- dplyr::enquo(y)
 
-TableMean  <- node %>%
-  dplyr::select(!!!Property_Name, !!y) %>%
-  dplyr::group_by(!!!Property_Name) %>%
-  tidyr::drop_na(!!y) %>%
-  dplyr::summarize(N=sum(!is.na(!!y)),
-                   Mean =mean(!!y),
-                   Min = min(!!y, na.rm = TRUE),
-                   Median=median(!!y, na.rm = TRUE),
-                   Max = max(!!y, na.rm = TRUE),
-                   SD  = sd(!!y, na.rm = TRUE),
-                   SE  = SD / sqrt(N)) %>%
-  data.frame()
-return(TableMean)
+  TableMean  <- node %>%
+    dplyr::select(!!!Property_Name, !!y) %>%
+    dplyr::group_by(!!!Property_Name) %>%
+    tidyr::drop_na(!!y) %>%
+    dplyr::summarise(Sum = sum(!!y),
+                     Mean =mean(!!y),
+                     Min = min(!!y, na.rm = TRUE),
+                     Median=median(!!y, na.rm = TRUE),
+                     Max = max(!!y, na.rm = TRUE),
+                     SD  = sd(!!y, na.rm = TRUE),
+                     SE  = SD / sqrt(Sum)) %>%
+    data.frame()
+  return(TableMean)
 
 }
 
@@ -541,12 +544,21 @@ tabler_count <- function(node, ...){
 
 TableCount <- node %>%
   dplyr::group_by(!!!Property_Name) %>%
-  dplyr::summarise(Count = sum(!is.na(!!!Property_Name))) %>%
+  tidyr::drop_na(!!!Property_Name) %>%
+  dplyr::summarise(Count = dplyr::n()) %>%
   dplyr::arrange(desc(Count)) %>%
   data.frame()
 
 return(TableCount)
 }
 
-tabler_count(QuantData,
-       assay_kit_name)
+head(tabler_count(QuantData,
+       assay_kit_nam))
+
+
+QuantData %>%
+  dplyr::group_by(assay_kit_name, project_id) %>%
+  tidyr::drop_na(assay_kit_name, project_id) %>%
+  dplyr::summarise(Count = dplyr::n()) %>%
+  dplyr::arrange(desc(Count)) %>%
+  head()

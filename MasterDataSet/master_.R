@@ -32,9 +32,9 @@ barplotr(QuantData,
          Interactive = FALSE,
          MEAN = TRUE)
 
-tabler(QuantData,
-       Property_Name,
-       projectID = FALSE)
+xplorer::tabler(QuantData,
+       assay_kit_name,
+       y = molecular_concentration)
 
 
 AnalyteData %>%x
