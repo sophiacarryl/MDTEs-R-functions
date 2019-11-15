@@ -17,7 +17,7 @@ tabler(node, Property, ProjectID = NULL, y = NULL, MEAN = NULL)
 
 \item{Property_Name}{A categorical column}
 
-\item{UniqueProjectID}{Specify TRUE or FALSE to count number of Unique Project IDs}
+\item{UniqueProjectID}{Specify TRUE or FALSE to count number of Unique Project IDs - CURRENTLY DEPRACATED}
 }
 \description{
 Table

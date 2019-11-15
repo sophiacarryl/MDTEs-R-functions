@@ -549,10 +549,6 @@ TableCount <- node %>%
   dplyr::arrange(desc(Count)) %>%
   data.frame()
 
-n = TableCount %>% Unique = summarise(dplyr::n(!!Property_Name))
-n_count = c("Number of Response Variables:", Unique)
-print(n_count, quote = FALSE)
-
 return(TableCount)
 }
 
@@ -562,8 +558,13 @@ head(tabler_count(QuantData,
 
 
 QuantData %>%
-  dplyr::group_by(assay_kit_name, project_id) %>%
-  tidyr::drop_na(assay_kit_name, project_id) %>%
+  dplyr::group_by(assay_kit_name) %>%
+  tidyr::drop_na(assay_kit_name) %>%
   dplyr::summarise(Count = dplyr::n()) %>%
-  dplyr::arrange(desc(Count)) %>%
-  head()
+  dplyr::arrange(desc(Count))
+
+
+
+n_count = c("Number of Response Variables:", Unique)
+print(n_count, quote = FALSE)
+

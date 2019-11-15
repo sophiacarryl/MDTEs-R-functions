@@ -3,7 +3,7 @@
 #' @param node A dataframe
 #' @param Property_Name A categorical column
 #' @param ProjectID Specify TRUE or FALSE to include Project ID in count
-#' @param UniqueProjectID Specify TRUE or FALSE to count number of Unique Project IDs
+#' @param UniqueProjectID Specify TRUE or FALSE to count number of Unique Project IDs - CURRENTLY DEPRACATED
 #' @param y A numerical column. Specify FALSE or node$columnname
 #' @param MEAN Calculated average of numerical column known as y
 #'
@@ -76,12 +76,12 @@ y <- dplyr::enquo(y)
     return(Table)
   }
 
-  else if (isTRUE(UniqueProjectID)){
-    pcounts = stats::aggregate(data = node, project_id ~ Property_Name, function(x) length(unique(x))) %>%
-      dplyr::arrange(dplyr::desc(project_id))
-
-    return(pcounts)
-  }
+  # else if (isTRUE(UniqueProjectID)){
+  #   pcounts = stats::aggregate(data = node, project_id ~ !!Property_Name, function(x) length(unique(x))) %>%
+  #     dplyr::arrange(dplyr::desc(project_id))
+  #
+  #   return(pcounts)
+  # }
 
   else{
     print("Specify TRUE or FALSE for projectID. e.g. projectID = TRUE ")

@@ -38,6 +38,9 @@ xplorer::tabler(QuantData,
        ProjectID = FALSE,
        my_y = molecular_concentration)
 
+xplorer::tabler(QuantData,
+                assay_kit_name,
+                ProjectID = TRUE)
 
 AnalyteData %>%
   group_by(days_to_assay, project_id) %>%
