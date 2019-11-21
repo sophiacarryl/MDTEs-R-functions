@@ -589,3 +589,8 @@ ggplot2::ggplot(AliquotData, aes(x = reorder(contrivance_method,contrivance_meth
   ggplot2::guides(fill = guide_legend(title = "Project IDs", title.position = "top", title.hjust = .5,
                                       title.theme = element_text(size = 15, face = "bold"))) +
   ggplot2::scale_fill_manual(values = colors)
+
+
+
+-------
+

@@ -61,7 +61,8 @@ ProjectID_Count <- PropertyName_ProjectID_Table %>% #Creates a dataframe using t
   # 1. Plot Count
 
 
-if(is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)){
+
+if(isFALSE(MEAN) && isFALSE(Interactive)){
 
    graph <- ggplot2::ggplot(node, aes(x = reorder(!!Property_Name,!!Property_Name,function(x)-length(x)),
                             fill = project_id)) +
@@ -86,7 +87,7 @@ if(is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)){
 
 }
 
-else if(is.null(y_variable) && isFALSE(MEAN) && isTRUE(Interactive)) {
+else if(isFALSE(MEAN) && isTRUE(Interactive)) {
 
    graph <- plotly::ggplotly(ggplot2::ggplot(node, aes(x = reorder(!!Property_Name,!!Property_Name,function(x)-length(x)),
                                                      fill = project_id)) +
@@ -113,15 +114,14 @@ else if(is.null(y_variable) && isFALSE(MEAN) && isTRUE(Interactive)) {
     return (graph)
 }
 
-
   # 2. Plot Y in a boxplot
 
 
-else if (!is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)) {
+  else if (!is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)) {
     # print(node)
     # print(y)
 
-  print("Plotted below is a boxplot to show distribution of Y")
+    print("Plotted below is a boxplot to show distribution of Y")
 
     graph <- ggplot2::ggplot(node, ggplot2::aes(x = !!Property_Name, !!y_variable)) +
       ggplot2::geom_boxplot(ggplot2::aes(fill = !!Property_Name)) +
@@ -130,7 +130,7 @@ else if (!is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)) {
       ggplot2::theme(legend.position = "bottom") +
       #labs( x = "Property Name") +
       ggplot2::theme(legend.title = ggplot2::element_text(color = "black", size = 10),
-            legend.text = ggplot2::element_text(color = "black", size = 5)) +
+                     legend.text = ggplot2::element_text(color = "black", size = 5)) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
       ggplot2::scale_fill_manual(values = custom_final28)
 
@@ -163,44 +163,45 @@ else if (!is.null(y_variable) && isFALSE(MEAN) && isFALSE(Interactive)) {
   # 3. Plot Mean of Y
 
 
-else if (!is.null(y_variable) && isTRUE(MEAN) && isFALSE(Interactive)) {
+  else if (!is.null(y_variable) && isTRUE(MEAN) && isFALSE(Interactive)) {
 
     graph <- ggplot2::ggplot(node, ggplot2::aes(reorder(x = project_id, (!!-y_variable)), !!y_variable)) +
-             ggplot2::theme_bw() +
-             ggplot2::stat_summary(geom = "bar", fun.y = mean, na.rm = TRUE, ggplot2::aes(fill = !!Property_Name)) +
-             ggplot2::stat_summary(geom = "errorbar", fun.data = mean_se) +
-             ggplot2::scale_fill_manual(values = custom_final28) +
-             ggplot2::theme(legend.position = "bottom") +
-             labs(x = "Project ID") +
-             ggplot2::theme(legend.title = ggplot2::element_text(color = "black", size = 10),
-                            legend.text = ggplot2::element_text(color = "black", size = 5)) +
-             ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
-             ggplot2::theme(legend.background = ggplot2::element_rect(linetype="longdash",colour ="darkgrey")) +
+      ggplot2::theme_bw() +
+      ggplot2::stat_summary(geom = "bar", fun.y = mean, na.rm = TRUE, ggplot2::aes(fill = !!Property_Name)) +
+      ggplot2::stat_summary(geom = "errorbar", fun.data = mean_se) +
+      ggplot2::scale_fill_manual(values = custom_final28) +
+      ggplot2::theme(legend.position = "bottom") +
+      labs(x = "Project ID") +
+      ggplot2::theme(legend.title = ggplot2::element_text(color = "black", size = 10),
+                     legend.text = ggplot2::element_text(color = "black", size = 5)) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
+      ggplot2::theme(legend.background = ggplot2::element_rect(linetype="longdash",colour ="darkgrey")) +
       ggplot2::guides(fill = guide_legend(title = Property_Name, title.position = "top", title.hjust = .5,
                                           title.theme = element_text(size = 15, face = "bold")))
-             # ggplot2::theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
-             #                axis.ticks.x=element_blank())
+    # ggplot2::theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
+    #                axis.ticks.x=element_blank())
 
     return(graph)
   }
 
-else if (!is.null(y_variable) && isTRUE(MEAN) && isTRUE(Interactive)) {
+  else if (!is.null(y_variable) && isTRUE(MEAN) && isTRUE(Interactive)) {
     graph <- plotly::ggplotly(ggplot2::ggplot(node, ggplot2::aes(reorder(x = !!Property_Name, -(!!y_variable)), !!y_variable)) +
-             ggplot2::theme_bw() +
-             ggplot2::stat_summary(geom = "bar", fun.y = mean, ggplot2::aes(fill = !!Property_Name)) +
-             ggplot2::stat_summary(geom = "errorbar", fun.data = mean_se) +
-             ggplot2::scale_fill_manual(values = custom_final28) +
-             ggplot2::theme(legend.position = "bottom") +
-             ggplot2::theme(legend.title = ggplot2::element_text(color = "black", size = 10),
-                            legend.text = ggplot2::element_text(color = "black", size = 5)) +
-             ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
-             ggplot2::theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()))
+                                ggplot2::theme_bw() +
+                                ggplot2::stat_summary(geom = "bar", fun.y = mean, ggplot2::aes(fill = !!Property_Name)) +
+                                ggplot2::stat_summary(geom = "errorbar", fun.data = mean_se) +
+                                ggplot2::scale_fill_manual(values = custom_final28) +
+                                ggplot2::theme(legend.position = "bottom") +
+                                ggplot2::theme(legend.title = ggplot2::element_text(color = "black", size = 10),
+                                               legend.text = ggplot2::element_text(color = "black", size = 5)) +
+                                ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
+                                ggplot2::theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()))
 
     st=format(Sys.time(), "%Y-%m-%d_%H:%M")
     htmlwidgets::saveWidget(as_widget(graph), paste("Mean_BarGraph_", st, ".html", sep = ""))
 
     return(graph)
   }
+
 
 else { stop("Specify MEAN = FALSE or TRUE; Interactive = TRUE or FALSE")}
 }
