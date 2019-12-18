@@ -41,3 +41,9 @@ BiospecimenData <- BiospecimenData[as.character(BiospecimenData$disease_type)!= 
 
 ########## Rename blanks from disease_type to "Unknown"
 BiospecimenData$disease_type[BiospecimenData$disease_type == ""] <- "Unknown"
+
+Tabler()
+
+1. Header names can be less generic.
+
+2. Tutorial on how to save table should be provided.
