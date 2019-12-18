@@ -8,11 +8,11 @@ barplotr(node, Property, y_variable = NULL, MEAN = NULL,
   Interactive = NULL)
 }
 \arguments{
-\item{node}{A data frame}
+\item{node}{A data frame (required)}
 
-\item{Property}{A categorical column}
+\item{Property}{A categorical column (required)}
 
-\item{MEAN}{Calculated average of numerical column known as y}
+\item{MEAN}{Calculated average of numerical column known as y. Specificy TRUE or FALSE}
 
 \item{Interactive}{An interactive html plot. Specificy TRUE or FALSE}
 

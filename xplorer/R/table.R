@@ -33,7 +33,10 @@ tabler <- function (node, Property, ProjectID = NULL,
 Property_Name <- dplyr::enquo(Property)
 y <- dplyr::enquo(y)
 
-# Makes a table of descriptive statistics of specified `y`.
+    # 1. Table
+#Makes a table of descriptive statistics of specified `y`.
+#Tabulates the N, mean, min, median, max, and SD of variable y and Property_Name. Project_ID is either TRUE or FALSE
+
   if(!is.null(y) && isTRUE(STAT) && isFALSE(ProjectID)){
     TableMean <- node %>%
       select(!!Property_Name, !!y) %>%
@@ -70,6 +73,9 @@ y <- dplyr::enquo(y)
     return(TableMean)
   }
 
+  #2. Table
+#Tabluates N (aka Count) of Property_Name. Project_ID is either TRUE or FALSE
+
   else if(isTRUE(ProjectID)){
     TableID <- node %>%
       dplyr::select(!!Property_Name, project_id) %>%
@@ -94,13 +100,6 @@ y <- dplyr::enquo(y)
 
     return(Table)
   }
-
-  # else if (isTRUE(UniqueProjectID)){
-  #   pcounts = stats::aggregate(data = node, project_id ~ !!Property_Name, function(x) length(unique(x))) %>%
-  #     dplyr::arrange(dplyr::desc(project_id))
-  #
-  #   return(pcounts)
-  # }
 
   else{
     print("Specify TRUE or FALSE for projectID. e.g. projectID = TRUE ")

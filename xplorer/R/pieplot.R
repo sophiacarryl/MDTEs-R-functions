@@ -27,6 +27,7 @@
 #' @export pieplotr
 pieplotr <- function (node, ..., ProjectID = NULL){
 
+# Colors I wanted to be used. Can easily be replaced or removed.
 colors <- c(  "#FFFFFF","#ffae42","#aa98a9", "#44AAAA", "#771155",
               "#ffa089","#1dacd6","#fddb6d","#6e5160", "#ffbf00", "#cd9575",
               "#ebc7df", "#91a3b0","#2b6cc4","#cc6666","#ceff1d","#5F7FC7",
@@ -44,9 +45,10 @@ colors <- c(  "#FFFFFF","#ffae42","#aa98a9", "#44AAAA", "#771155",
               "#cda4de", "#cc7c82", "#CBD588", "#18402c", "#f0f8ff",
               "#D21E2C")
 
-
+# This allows users to add multiple Property_Names if necessary.
 Property_Name <- dplyr::enquos(...)
 
+# Data formatting step necessary for nested pieplot using function sunburstR()
 PropertyName_ProjectID_Table <-  node %>% #Creates a dataframe that groups by Property_Name and ProjectID for usage in pcount below.
                                  dplyr::group_by(project_id,!!!Property_Name) %>%
                                  dplyr::summarise(Count = dplyr::n()) %>%
@@ -59,6 +61,8 @@ PropertyName_ProjectID_Table <- PropertyName_ProjectID_Table %>%
   dplyr::mutate(path = paste(project_id,!!!Property_Name, sep="-")) %>%
   dplyr::select(path, Count)
 
+# 1. Nested pie plot with Property_Names and Project IDs
+
 if(isTRUE(ProjectID)){
 
     sunny = sunburstR::sund2b(PropertyName_ProjectID_Table,
@@ -70,6 +74,8 @@ if(isTRUE(ProjectID)){
     return(sunny)
 
 }
+
+# 1. Pie plot with Property_Names and NO project IDs
 
 else if(isFALSE(ProjectID)){
 
@@ -90,6 +96,6 @@ else if(isFALSE(ProjectID)){
 }
 
 else {
-  print("You got this!")
+  print("Review inputs")
    }
 }
