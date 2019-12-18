@@ -9,10 +9,27 @@ pieplotr(node, ..., ProjectID = NULL)
 \arguments{
 \item{node}{A dataframe}
 
-\item{ProjectID}{Specify TRUE or FALSE to include Project ID into pieplot}
+\item{...}{is a property or properties. Usually a categorical variable}
 
-\item{Property}{A categorical column}
+\item{ProjectID}{Specify TRUE or FALSE to include Project ID into pieplot}
+}
+\value{
+Nested pie plot and common pie eplot
 }
 \description{
-Pie plot and nested pie plot
+Creates a pie plot (ProjectID = FALSE) or a nested pie plot (ProjectID = TRUE) to demonstrate proportion of property.
+}
+\examples{
+Nested pie plot the proportion of Properties, blood_tube_type & tissue_type, when ProjectID = TRUE
+
+pieplotr(BiospecimenData,
+blood_tube_type,tissue_type
+ProjectID = TRUE)
+
+Common pie plot of the proportion of Property, disease_type, when ProjectID = FALSE. Note: multiple properties cannot be passed successfully when ProjectID = FALSE.
+
+pieplotr(BiospecimenData,
+disease_type,
+ProjectID = FALSE)
+
 }

@@ -4,19 +4,30 @@
 \alias{barplotr}
 \title{Bar plot}
 \usage{
-barplotr(node, Property, y = NULL, MEAN = NULL, Interactive = NULL)
+barplotr(node, Property, y_variable = NULL, MEAN = NULL,
+  Interactive = NULL)
 }
 \arguments{
-\item{node}{A data frame}
+\item{node}{A data frame (required)}
 
-\item{Property}{A categorical column}
+\item{Property}{A categorical column (required)}
 
-\item{y}{A numerical column. Specificy FALSE or node$columnname}
-
-\item{MEAN}{Calculated average of numerical column known as y}
+\item{MEAN}{Calculated average of numerical column known as y. Specificy TRUE or FALSE}
 
 \item{Interactive}{An interactive html plot. Specificy TRUE or FALSE}
+
+\item{y}{A numerical column.}
+}
+\value{
+Barplots of Count, MEAN
 }
 \description{
-Bar plot
+Creates barplots for count or mean with SE that can be interactive or not.
+}
+\examples{
+
+
+
+
+
 }
